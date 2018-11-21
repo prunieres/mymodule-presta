@@ -11,7 +11,7 @@ class MyModule extends Module
     $this->name = 'mymodule';
     $this->tab = 'front_office_features';
     $this->version = '1.0.0';
-    $this->author = 'Firstname Lastname';
+    $this->author = 'Lili Ploum';
     $this->need_instance = 0;
     $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
     $this->bootstrap = true;
@@ -19,7 +19,7 @@ class MyModule extends Module
     parent::__construct();
 
     $this->displayName = $this->l('My module');
-    $this->description = $this->l('Description of my module.');
+    $this->description = $this->l('Changer le champs MYMODULE_NAME.');
 
     $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
 
@@ -27,20 +27,19 @@ class MyModule extends Module
       $this->warning = $this->l('No name provided');
   }
 
+
   public function install()
   {
-  if (Shop::isFeatureActive())
-    Shop::setContext(Shop::CONTEXT_ALL);
+    if (Shop::isFeatureActive())
+      Shop::setContext(Shop::CONTEXT_ALL);
 
-  if (!parent::install() ||
-    !$this->registerHook('leftColumn') ||
-    !$this->registerHook('header') ||
-    !Configuration::updateValue('MYMODULE_NAME', 'my friend')
-  )
-    return false;
-
-  return true;
+    return parent::install() &&
+      $this->registerHook('leftColumn') &&
+      $this->registerHook('header') &&
+      Configuration::updateValue('MYMODULE_NAME', 'my friend');
   }
+
+
 
   public function uninstall()
   {
@@ -132,5 +131,32 @@ class MyModule extends Module
     $helper->fields_value['MYMODULE_NAME'] = Configuration::get('MYMODULE_NAME');
 
     return $helper->generateForm($fields_form);
+  }
+
+
+  //affichage en front office
+
+
+  public function hookDisplayLeftColumn($params)
+  {
+  $this->context->smarty->assign(
+      array(
+          'my_module_name' => Configuration::get('MYMODULE_NAME'),
+          'my_module_link' => $this->context->link->getModuleLink('mymodule', 'display')
+      )
+  );
+  return $this->display(__FILE__, 'mymodule.tpl');
+  }
+
+
+
+  public function hookDisplayRightColumn($params)
+  {
+  return $this->hookDisplayLeftColumn($params);
+  }
+
+  public function hookDisplayHeader()
+  {
+  $this->context->controller->addCSS($this->_path.'css/mymodule.css', 'all');
   }
 }
